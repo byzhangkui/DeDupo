@@ -1,0 +1,29 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+
+# Rust
+dedupo-core/target/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Distribution
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
