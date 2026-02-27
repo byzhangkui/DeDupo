@@ -1,0 +1,89 @@
+name: DeDupo
+options:
+  bundleIdPrefix: com.dedupo
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+
+targets:
+  DeDupo:
+    type: application
+    platform: macOS
+    sources:
+      - path: DeDupo
+        excludes:
+          - Bridge/dedupo_ffi.h
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dedupo.app
+        PRODUCT_NAME: DeDupo
+        INFOPLIST_FILE: DeDupo/Info.plist
+        SWIFT_OBJC_BRIDGING_HEADER: DeDupo/Bridge/dedupo_ffi.h
+        LIBRARY_SEARCH_PATHS:
+          - "$(BUILT_PRODUCTS_DIR)"
+          - "$(SRCROOT)/dedupo-core/target/aarch64-apple-darwin/debug"
+          - "$(SRCROOT)/dedupo-core/target/aarch64-apple-darwin/release"
+          - "$(SRCROOT)/dedupo-core/target/x86_64-apple-darwin/debug"
+          - "$(SRCROOT)/dedupo-core/target/x86_64-apple-darwin/release"
+        OTHER_LDFLAGS:
+          - "-ldedupo_core"
+          - "-lresolv"
+        ENABLE_HARDENED_RUNTIME: true
+        CODE_SIGN_ENTITLEMENTS: ""
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-Owholemodule"
+
+    preBuildScripts:
+      - name: "Build Rust Core"
+        script: |
+          set -e
+          RUST_DIR="${SRCROOT}/dedupo-core"
+          cd "$RUST_DIR"
+
+          if [ "$PLATFORM_NAME" = "macosx" ]; then
+              if [ "$ARCHS" = "arm64" ]; then
+                  RUST_TARGET="aarch64-apple-darwin"
+              else
+                  RUST_TARGET="x86_64-apple-darwin"
+              fi
+          fi
+
+          if [ -z "$RUST_TARGET" ]; then
+              ARCH=$(uname -m)
+              if [ "$ARCH" = "arm64" ]; then
+                  RUST_TARGET="aarch64-apple-darwin"
+              else
+                  RUST_TARGET="x86_64-apple-darwin"
+              fi
+          fi
+
+          echo "Building dedupo-core for target: $RUST_TARGET"
+
+          if [ "$CONFIGURATION" = "Release" ]; then
+              cargo build --release --target "$RUST_TARGET"
+              LIB_PATH="target/$RUST_TARGET/release"
+          else
+              cargo build --target "$RUST_TARGET"
+              LIB_PATH="target/$RUST_TARGET/debug"
+          fi
+
+          cp "$LIB_PATH/libdedupo_core.a" "${BUILT_PRODUCTS_DIR}/"
+          echo "Copied libdedupo_core.a to ${BUILT_PRODUCTS_DIR}/"
+
+          cbindgen --config cbindgen.toml --crate dedupo-core \
+              --output "${SRCROOT}/DeDupo/Bridge/dedupo_ffi.h"
+
+          echo "Build complete."
+        outputFiles:
+          - "$(BUILT_PRODUCTS_DIR)/libdedupo_core.a"
+          - "$(SRCROOT)/DeDupo/Bridge/dedupo_ffi.h"
