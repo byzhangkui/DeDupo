@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// Monitors disk mount/unmount events and reports available volumes.
 final class VolumeMonitor {

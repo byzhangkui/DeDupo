@@ -2,6 +2,7 @@ import SwiftUI
 
 /// ViewModel for the scanner view — manages scan targets and scan execution.
 @Observable
+@MainActor
 final class ScannerViewModel {
     /// Directories selected for scanning.
     var scanTargets: [ScanTarget] = []
@@ -58,16 +59,16 @@ final class ScannerViewModel {
         }
 
         // Run scan on a background thread
-        Task.detached { [weak self] in
+        Task.detached { [engine] in
             let result = engine.startScan { scanned, total, phase in
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.scannedCount = scanned
                     self?.totalEstimated = total
                     self?.phaseDescription = phase.description
                 }
             }
 
-            await MainActor.run {
+            await MainActor.run { [weak self] in
                 self?.isScanning = false
                 if result == 0 {
                     self?.scanCompleted = true

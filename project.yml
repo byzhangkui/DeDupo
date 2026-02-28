@@ -47,6 +47,7 @@ targets:
       - name: "Build Rust Core"
         script: |
           set -e
+          export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
           RUST_DIR="${SRCROOT}/dedupo-core"
           cd "$RUST_DIR"
 
