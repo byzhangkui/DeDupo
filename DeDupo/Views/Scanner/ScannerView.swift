@@ -3,7 +3,7 @@ import SwiftUI
 /// View for configuring and starting a deduplication scan.
 struct ScannerView: View {
     @Environment(AppState.self) private var appState
-    @State private var viewModel = ScannerViewModel()
+    var viewModel: ScannerViewModel
     @State private var isTargeted = false
 
     var body: some View {
@@ -16,11 +16,6 @@ struct ScannerView: View {
         }
         .padding()
         .navigationTitle("Scan for Duplicates")
-        .onChange(of: viewModel.scanCompleted) { _, completed in
-            if completed {
-                appState.selectedNavigation = .results
-            }
-        }
     }
 
     // MARK: - Scan Configuration

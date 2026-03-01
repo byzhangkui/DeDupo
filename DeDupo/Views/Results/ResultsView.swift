@@ -3,7 +3,7 @@ import SwiftUI
 /// View displaying duplicate file groups found during a scan.
 struct ResultsView: View {
     @Environment(AppState.self) private var appState
-    @State private var viewModel = ResultsViewModel()
+    var viewModel: ResultsViewModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,7 +15,9 @@ struct ResultsView: View {
         }
         .navigationTitle("Results")
         .onAppear {
-            viewModel.loadResults(engine: appState.engine)
+            if viewModel.groups.isEmpty {
+                viewModel.loadResults(engine: appState.engine)
+            }
         }
     }
 

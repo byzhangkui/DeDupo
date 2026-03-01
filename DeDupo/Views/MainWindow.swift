@@ -3,6 +3,8 @@ import SwiftUI
 /// Main application window using NavigationSplitView.
 struct MainWindow: View {
     @Environment(AppState.self) private var appState
+    @State private var scannerViewModel = ScannerViewModel()
+    @State private var resultsViewModel = ResultsViewModel()
 
     var body: some View {
         @Bindable var state = appState
@@ -26,11 +28,17 @@ struct MainWindow: View {
         } detail: {
             switch appState.selectedNavigation {
             case .scanner:
-                ScannerView()
+                ScannerView(viewModel: scannerViewModel)
             case .results:
-                ResultsView()
+                ResultsView(viewModel: resultsViewModel)
             case .settings:
                 SettingsView()
+            }
+        }
+        .onChange(of: scannerViewModel.scanCompleted) { _, completed in
+            if completed {
+                resultsViewModel.loadResults(engine: appState.engine)
+                appState.selectedNavigation = .results
             }
         }
     }
