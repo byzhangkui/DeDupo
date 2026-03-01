@@ -20,6 +20,17 @@ struct ResultsView: View {
                 viewModel.loadResults(engine: appState.engine)
             }
         }
+        .alert(
+            "Move \(viewModel.filesToDelete.count) files to the Trash?",
+            isPresented: $showingDeleteConfirmation
+        ) {
+            Button("Cancel", role: .cancel) {}
+            Button("Move to Trash", role: .destructive) {
+                deleteSelectedFiles()
+            }
+        } message: {
+            Text("This will recover \(ByteCountFormatter.string(fromByteCount: Int64(viewModel.spaceToRecover), countStyle: .file)) of space.")
+        }
     }
 
     // MARK: - Empty State
@@ -92,18 +103,6 @@ struct ResultsView: View {
             .disabled(viewModel.filesToDelete.isEmpty)
         }
         .padding()
-        .confirmationDialog(
-            "Are you sure you want to move \(viewModel.filesToDelete.count) files to the Trash?",
-            isPresented: $showingDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Move to Trash", role: .destructive) {
-                deleteSelectedFiles()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will recover \(ByteCountFormatter.string(fromByteCount: Int64(viewModel.spaceToRecover), countStyle: .file)) of space.")
-        }
     }
 
     // MARK: - Actions
