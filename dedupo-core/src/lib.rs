@@ -43,6 +43,11 @@ impl Engine {
         self.config.paths.push(path.to_string());
     }
 
+    /// Clear all scan paths (call before adding new paths for a fresh scan).
+    pub fn clear_scan_paths(&mut self) {
+        self.config.paths.clear();
+    }
+
     /// Run the full deduplication pipeline.
     ///
     /// The `progress_cb` is called periodically with scan progress updates.

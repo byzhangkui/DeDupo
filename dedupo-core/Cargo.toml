@@ -5,7 +5,7 @@ edition = "2021"
 description = "Core deduplication engine for DeDupo"
 
 [lib]
-crate-type = ["staticlib"] # Compile as .a static library for FFI
+crate-type = ["rlib", "staticlib"] # Compile as both .rlib and .a static library
 
 [dependencies]
 walkdir = "2"                                          # Recursive file traversal
@@ -19,3 +19,6 @@ thiserror = "2"                                        # Error handling
 
 [build-dependencies]
 cbindgen = "0.27" # Auto-generate C header files
+
+[dev-dependencies]
+tempfile = "3.26.0"

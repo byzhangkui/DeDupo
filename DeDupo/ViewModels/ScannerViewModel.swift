@@ -45,7 +45,12 @@ final class ScannerViewModel {
 
     /// Start the scan using the Rust engine.
     func startScan(engine: RustEngine?) {
-        guard let engine, !scanTargets.isEmpty else { return }
+        guard let engine, !scanTargets.isEmpty else {
+            if engine == nil {
+                errorMessage = "Engine not initialized"
+            }
+            return
+        }
 
         isScanning = true
         scanCompleted = false
@@ -53,7 +58,8 @@ final class ScannerViewModel {
         scannedCount = 0
         totalEstimated = 0
 
-        // Add all target paths to the engine
+        // Clear previous paths and add all target paths to the engine
+        engine.clearScanPaths()
         for target in scanTargets {
             engine.addScanPath(target.path)
         }

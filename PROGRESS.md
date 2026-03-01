@@ -30,13 +30,13 @@
 | 模块 | 文件 | 状态 | 说明 |
 |------|------|------|------|
 | App 入口 | `DeDupoApp.swift` | ✅ 完成 | `@main`，`WindowGroup` + `Settings` Scene，默认 900x600 |
-| 全局状态 | `AppState.swift` | ✅ 完成 | `RustEngine` 初始化（数据库在 `~/Library/Application Support/DeDupo/`），侧边栏导航，挂载卷列表 |
+| 全局状态 | `AppState.swift` | ✅ 完成 | `RustEngine` 初始化（数据库在 `~/Library/Application Support/DeDupo/`），侧边栏导航 |
 | FFI 桥接 | `RustBridge.swift` | ✅ 完成 | `RustEngine` 类完整封装所有 FFI 调用，`ProgressCallbackBox` + trampoline 回调桥接 |
 | 主窗口 | `MainWindow.swift` | ✅ 完成 | `NavigationSplitView`，侧边栏含导航项 + 磁盘列表，Detail 区域按选中项切换 |
 | 扫描配置 | `ScannerView.swift` | ✅ 完成 | 拖放区域 + `NSOpenPanel` 文件夹选择器 + 目标列表 + 开始按钮 + 错误提示 |
 | 扫描进度 | `ScanProgressView.swift` | ✅ 完成 | 线性进度条 + 阶段描述 + 文件计数 + 取消按钮 |
 | 扫描 ViewModel | `ScannerViewModel.swift` | ✅ 完成 | `@MainActor`，管理扫描目标、进度状态、后台执行扫描任务 |
-| 结果列表 | `ResultsView.swift` | ✅ 完成 | 空状态 + 汇总栏 + 排序控件 + 分组列表 + 操作栏（删除按钮占位） |
+| 结果列表 | `ResultsView.swift` | ✅ 完成 | 空状态 + 汇总栏 + 排序控件 + 分组列表 + "Delete Selected" 功能 (Commit: `97f70ab`) |
 | 分组行 | `DuplicateGroupRow.swift` | ✅ 完成 | `DisclosureGroup` 展开/折叠，文件勾选/取消保留，路径显示，卷名标签 |
 | 文件详情 | `FileDetailView.swift` | ✅ 完成 | 路径、大小、卷、状态显示 + 在 Finder 中显示 + Quick Look |
 | 结果 ViewModel | `ResultsViewModel.swift` | ✅ 完成 | 排序（大小/浪费空间/文件数）+ 保留切换 + 待删除统计 + 可恢复空间计算 |
@@ -44,6 +44,8 @@
 | 磁盘监控 | `VolumeMonitor.swift` | ✅ 完成 | 监听挂载/卸载通知，返回 `VolumeInfo` 列表，区分内部/外部磁盘 |
 | 移至废纸篓 | `TrashService.swift` | ✅ 完成 | `FileManager.trashItem` 单文件/批量删除 |
 | 设置页面 | `SettingsView.swift` | ✅ 完成 | 跳过隐藏文件、跳过系统目录、最小文件大小设置 + 版本信息 |
+| 删除确认对话框 | `ResultsView.swift` | ✅ 完成 | 删除前弹出确认 Alert，防止误操作 (Commit: `e90dcaa`) |
+| 扫描自动跳转 | `MainWindow.swift` | ✅ 完成 | 扫描完成后 `selectedNavigation` 自动切换到 `.results` (Commit: `72941f6`) |
 
 ### 构建系统
 
@@ -61,6 +63,7 @@
 | `docs/architecture.md` | ✅ 完成 — 完整中文架构设计文档 |
 | `docs/build-guide.md` | ✅ 完成 — 开发环境搭建指南 |
 | `README.md` | ✅ 完成 — 项目简介与快速开始 |
+| `PROGRESS.md` | ✅ 同步 — 开发进度实时同步 |
 
 ---
 
@@ -72,10 +75,7 @@
 |------|--------|------|
 | VolumeMonitor 接入 AppState | P0 | `AppState.init` 中需启动 `VolumeMonitor`，将卷信息同步到 `mountedVolumes` |
 | 扫描结果持久化 | P0 | `Engine.scan()` 完成后需调用 `db.start_scan/save_duplicate_groups/finish_scan` 写入数据库 |
-| 删除按钮接入 TrashService | P0 | `ResultsView` 中"Delete Selected"按钮需调用 `TrashService.moveToTrash(paths:)` |
-| 扫描完成自动跳转到结果 | P1 | 扫描完成后 `selectedNavigation` 应切换到 `.results` |
 | Settings 实际生效 | P1 | `SettingsView` 中的设置（跳过隐藏文件、最小文件大小）未传递给 Rust 引擎 |
-| 删除确认对话框 | P1 | 删除前需弹出确认对话框，防止误操作 |
 
 ### 架构文档中规划但未实现的 MVP 功能
 
@@ -131,4 +131,4 @@ Phase 4: 打磨与分发 🔲 未开始
 
 ---
 
-*最后更新：2026-03-01*
+*最后更新：2026-03-02*

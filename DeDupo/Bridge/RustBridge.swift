@@ -45,6 +45,11 @@ final class RustEngine: @unchecked Sendable {
         path.withCString { dedupo_add_scan_path(engine, $0) }
     }
 
+    /// Clear all scan paths (call before adding new paths for a fresh scan).
+    func clearScanPaths() {
+        dedupo_clear_scan_paths(engine)
+    }
+
     /// Start an asynchronous scan with progress reporting.
     ///
     /// - Parameter onProgress: Called with (scannedCount, totalEstimated, phase).
