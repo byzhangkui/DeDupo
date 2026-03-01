@@ -51,6 +51,16 @@ void dedupo_engine_free(struct Engine *engine);
 int dedupo_add_scan_path(struct Engine *engine, const char *path);
 
 /**
+ * Clear all scan paths.
+ *
+ * Call this before adding new paths for a fresh scan.
+ *
+ * # Safety
+ * `engine` must be a valid pointer.
+ */
+void dedupo_clear_scan_paths(struct Engine *engine);
+
+/**
  * Start an asynchronous scan.
  *
  * The progress callback is invoked periodically with scan updates.

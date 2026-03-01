@@ -16,6 +16,11 @@ struct ScannerView: View {
         }
         .padding()
         .navigationTitle("Scan for Duplicates")
+        .onChange(of: viewModel.scanCompleted) { _, completed in
+            if completed {
+                appState.selectedNavigation = .results
+            }
+        }
     }
 
     // MARK: - Scan Configuration

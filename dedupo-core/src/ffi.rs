@@ -76,6 +76,20 @@ pub unsafe extern "C" fn dedupo_add_scan_path(
     0
 }
 
+/// Clear all scan paths.
+///
+/// Call this before adding new paths for a fresh scan.
+///
+/// # Safety
+/// `engine` must be a valid pointer.
+#[no_mangle]
+pub unsafe extern "C" fn dedupo_clear_scan_paths(engine: *mut Engine) {
+    if !engine.is_null() {
+        let engine = unsafe { &mut *engine };
+        engine.clear_scan_paths();
+    }
+}
+
 /// Progress callback type.
 ///
 /// Parameters: scanned_count, total_estimated, phase (as i32), user context
