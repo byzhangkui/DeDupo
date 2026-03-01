@@ -72,4 +72,17 @@ final class ResultsViewModel {
             return total + UInt64(deleteCount) * group.fileSize
         }
     }
+
+    /// Remove successfully trashed files from the current groups.
+    func removeDeletedFiles(paths: Set<String>) {
+        for i in (0..<groups.count).reversed() {
+            // Remove deleted files from this group
+            groups[i].files.removeAll { paths.contains($0.path) }
+            
+            // If the group has 1 or 0 files left, it's no longer a duplicate group
+            if groups[i].files.count <= 1 {
+                groups.remove(at: i)
+            }
+        }
+    }
 }
