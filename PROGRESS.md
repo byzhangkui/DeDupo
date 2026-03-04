@@ -131,4 +131,34 @@ Phase 4: 打磨与分发 🔲 未开始
 
 ---
 
-*最后更新：2026-03-02*
+## 2026-03-04 — 扫描结果持久化 + 增量扫描
+
+### 实现内容
+
+**结果持久化（Feature 1）**
+- `ResultsViewModel.saveResults()`：将 `groups` 编码为 JSON，写入 `~/Library/Application Support/DeDupo/last_scan.json`
+- `ResultsViewModel.loadSavedResults()`：启动时从文件反序列化，仅在 `groups` 为空时执行
+- `MainWindow.onAppear`：调用 `loadSavedResults()`
+- 扫描完成 `.onChange`：调用 `saveResults()`，全量/增量两路均保存
+
+**增量扫描（Feature 2）**
+- `ScannerViewModel.scannedPaths: Set<String>`：记录已扫描路径，UserDefaults 持久化
+- `ScannerViewModel.newTargets`、`hasNewTargets`：计算未扫描的目标
+- `ScannerViewModel.startIncrementalScan(engine:)`：只传新路径给引擎，完成后更新 `scannedPaths`
+- `ResultsViewModel.mergeResults(_:)`：按 `groupHash` 合并，避免重复文件
+- 修复 `addTarget` 去重 bug（原用 UUID 比较，改为 path 比较）
+- 目标列表徽章：`"Scanned"` (灰) / `"New"` (蓝)
+- 按钮动态变化：`"Start Scan"` → `"Scan New Folders" + "Full Rescan"` → `"Full Rescan"`
+
+### 变更文件
+- `DeDupo/ViewModels/ScannerViewModel.swift`
+- `DeDupo/ViewModels/ResultsViewModel.swift`
+- `DeDupo/Views/Scanner/ScannerView.swift`
+- `DeDupo/Views/MainWindow.swift`
+
+### Commit ID
+*（待提交后填入）*
+
+---
+
+*最后更新：2026-03-04*

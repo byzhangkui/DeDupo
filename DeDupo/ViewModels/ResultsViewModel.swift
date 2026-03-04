@@ -45,11 +45,61 @@ final class ResultsViewModel {
         return sortDescending ? sorted.reversed() : sorted
     }
 
+    // MARK: - Persistence
+
+    private static var saveURL: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let dir = appSupport.appendingPathComponent("DeDupo", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("last_scan.json")
+    }
+
+    func saveResults() {
+        do {
+            let data = try JSONEncoder().encode(groups)
+            try data.write(to: Self.saveURL, options: .atomic)
+        } catch {
+            // Non-fatal: persistence failure doesn't affect current session
+        }
+    }
+
+    func loadSavedResults() {
+        guard groups.isEmpty else { return }
+        guard let data = try? Data(contentsOf: Self.saveURL) else { return }
+        if let saved = try? JSONDecoder().decode([DuplicateGroup].self, from: data) {
+            groups = saved
+        }
+    }
+
+    // MARK: - Loading
+
     /// Load results from the Rust engine.
     func loadResults(engine: RustEngine?) {
         guard let engine else { return }
         groups = engine.getGroups()
     }
+
+    /// Merge incremental scan results into existing groups.
+    func mergeResults(_ newGroups: [DuplicateGroup]) {
+        // Build a lookup from groupHash to index in existing groups
+        var hashToIndex: [String: Int] = [:]
+        for (i, group) in groups.enumerated() {
+            hashToIndex[group.groupHash] = i
+        }
+
+        for newGroup in newGroups {
+            if let idx = hashToIndex[newGroup.groupHash] {
+                // Merge new files into existing group (avoid duplicates by path)
+                let existingPaths = Set(groups[idx].files.map(\.path))
+                let filesToAdd = newGroup.files.filter { !existingPaths.contains($0.path) }
+                groups[idx].files.append(contentsOf: filesToAdd)
+            } else {
+                groups.append(newGroup)
+            }
+        }
+    }
+
+    // MARK: - Actions
 
     /// Toggle the kept status of a file in a group.
     func toggleKept(groupIndex: Int, fileIndex: Int) {
@@ -76,10 +126,7 @@ final class ResultsViewModel {
     /// Remove successfully trashed files from the current groups.
     func removeDeletedFiles(paths: Set<String>) {
         for i in (0..<groups.count).reversed() {
-            // Remove deleted files from this group
             groups[i].files.removeAll { paths.contains($0.path) }
-            
-            // If the group has 1 or 0 files left, it's no longer a duplicate group
             if groups[i].files.count <= 1 {
                 groups.remove(at: i)
             }
