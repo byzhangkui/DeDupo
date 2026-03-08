@@ -35,11 +35,19 @@ struct MainWindow: View {
                 SettingsView()
             }
         }
+        .onAppear {
+            resultsViewModel.loadSavedResults()
+        }
         .onChange(of: scannerViewModel.scanCompleted) { _, completed in
-            if completed {
+            guard completed else { return }
+            if scannerViewModel.isIncrementalScan {
+                let newGroups = appState.engine?.getGroups() ?? []
+                resultsViewModel.mergeResults(newGroups)
+            } else {
                 resultsViewModel.loadResults(engine: appState.engine)
-                appState.selectedNavigation = .results
             }
+            resultsViewModel.saveResults()
+            appState.selectedNavigation = .results
         }
     }
 }

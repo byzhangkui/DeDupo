@@ -57,6 +57,24 @@ struct ScannerView: View {
                             .lineLimit(1)
                             .truncationMode(.middle)
                         Spacer()
+                        // Status badge
+                        if viewModel.scannedPaths.contains(target.path) {
+                            Text("Scanned")
+                                .font(.caption2)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.secondary.opacity(0.2))
+                                .foregroundStyle(.secondary)
+                                .clipShape(Capsule())
+                        } else if viewModel.hasScannedTargets {
+                            Text("New")
+                                .font(.caption2)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.blue.opacity(0.15))
+                                .foregroundStyle(.blue)
+                                .clipShape(Capsule())
+                        }
                         Button {
                             viewModel.removeTarget(target)
                         } label: {
@@ -70,22 +88,66 @@ struct ScannerView: View {
             .frame(maxHeight: 200)
         }
 
-        // Start button
-        Button {
-            viewModel.startScan(engine: appState.engine)
-        } label: {
-            Label("Start Scan", systemImage: "play.fill")
-                .frame(maxWidth: 200)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .disabled(viewModel.scanTargets.isEmpty)
+        // Scan buttons
+        scanButtonsView
 
         // Error display
         if let error = viewModel.errorMessage {
             Text(error)
                 .foregroundStyle(.red)
                 .font(.caption)
+        }
+    }
+
+    @ViewBuilder
+    private var scanButtonsView: some View {
+        let hasScanned = viewModel.hasScannedTargets
+        let hasNew = viewModel.hasNewTargets
+        let empty = viewModel.scanTargets.isEmpty
+
+        if hasScanned && hasNew {
+            // Show primary "Scan New Folders" + secondary "Full Rescan"
+            VStack(spacing: 8) {
+                Button {
+                    viewModel.startIncrementalScan(engine: appState.engine)
+                } label: {
+                    Label("Scan New Folders", systemImage: "plus.magnifyingglass")
+                        .frame(maxWidth: 220)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                Button {
+                    viewModel.startScan(engine: appState.engine)
+                } label: {
+                    Label("Full Rescan", systemImage: "arrow.clockwise")
+                        .frame(maxWidth: 220)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.regular)
+            }
+        } else if hasScanned && !hasNew {
+            // Only "Full Rescan" available
+            Button {
+                viewModel.startScan(engine: appState.engine)
+            } label: {
+                Label("Full Rescan", systemImage: "arrow.clockwise")
+                    .frame(maxWidth: 200)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(empty)
+        } else {
+            // No previous scan — standard "Start Scan"
+            Button {
+                viewModel.startScan(engine: appState.engine)
+            } label: {
+                Label("Start Scan", systemImage: "play.fill")
+                    .frame(maxWidth: 200)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(empty)
         }
     }
 
